@@ -57,8 +57,8 @@ import random
 
 #consts
 
-COLORS = (('Hearts', 'Spades', 'Diamonds', 'Clubs'))
-VALUES = (('2','3','4','5','6','7','8','9','jack','queen','king','ace'))
+COLORS = frozenset(('Hearts', 'Spades', 'Diamonds', 'Clubs'))
+VALUES = frozenset(('2','3','4','5','6','7','8','9','jack','queen','king','ace'))
 
 #classes
 
@@ -80,6 +80,9 @@ class Deck:
 
     def shuffle(self):
         random.shuffle(self.cards)
+
+    def get_size(self):
+        return len(self.cards)
         
 
     #card
@@ -100,79 +103,125 @@ class Card:
     #   -stand 
     #   -hit
 
-    class Partisipant:
+class Partisipant:
         '''Partispipant in the game of blackjack'''
          
         def __init__(self, name):
             self.name = name
             self.hand = []
-            self.hand_count=0
 
         def show_hand(self):
-            print(self.hand)
+            print(f'{self.hand} with count: {self.__get_hand_count()}')
                     
         def hit(self, deck):
             self.hand.append(deck.draw())  
 
-        def get_hand_count(self):
+        def __get_hand_count(self):
             count = 0
             for c in self.hand:
-                count += int(c.get_value())
+                if c.get_value() in  ('jack', 'queen', 'king'):
+                    count += 10
+                elif c.get_value() is 'ace':
+                    ace_choice = input('Count  as 11 (yes)? Otherwise 1.')
+                    if ace_choice is 'yes': count += 11 
+                    else: count += 1
+                else: count += int(c.get_value())
+            return count
+
+        def reset(self):
+            self.hand = []
 
 
     #dealer:partisipant
-    class Dealer(Partisipant):
-        '''Partisipant in the role of a dealer, whose actions are determined by the rules'''
+class Dealer(Partisipant):
+    '''Partisipant in the role of a dealer, whose actions are determined by the rules'''
 
-        def __init__(self):
-            super.__init__(self)
-            self.hidden = True
-            
-        def show_hand(self):
-            if self.hidden:
-                print(self.hand[0])
-            else:
-                super.show_hand()
+    def __init__(self, name):
+        super().__init__(name)
+        self.hidden = True
+        
+    def show_hand(self):
+        print('Dealers hand:')
+        if self.hidden:
+            print(f'With one hidden card: {self.hand[0]} and count of {self.hand[0].get_value}')
+        else:
+            super().show_hand()
 
-    #player:partisipant
-    #   -hand
-    #   -purse
-    #   -bet
-    #   surrender()
-    class Player(Partisipant):
-        '''Partisipant in the role of a player, able to bet or surrender (and later use side rules)'''
+    def hit(self, deck):
+        super().hit(deck)
+        print(f'Dealer {self.name} hits.' )
+    
+    def __get_hand_count(self):
+        count = 0
+        for c in self.hand:
+            if c.get_value() in  ('jack', 'queen', 'king'):
+                count += 10
+            elif c.get_value() is 'ace':
+                if count + 11 > 21: count+= 1
+                else: count += 11
+            else: count += int(c.get_value())
 
-        def __init__(self, purse):
-            super.__init__(self)
-            self.purse = purse 
-            self.bet = 0
-            self.stands = False
+    def reset(self):
+        super().reset()
+        self.hidden = True
 
-        def stand(self):
-            self.stands = True
-            print(f"The player {self.name} stands")
 
+#player:partisipant
+#   -hand
+#   -purse
+#   -bet
+#   surrender()
+class Player(Partisipant):
+    '''Partisipant in the role of a player, able to bet or surrender (and later use side rules)'''
+
+    def __init__(self, name, purse):
+        super().__init__(name)
+        self.purse = purse 
+        self.bet = 0
+        self.stands = False
+        print(f'Player {self.name} initalized')
+
+    def hit(self, deck):
+        super().hit(deck)
+        print(f'Player {self.name} hits.' )
+
+    def stand(self):
+        self.stands = True
+        print(f"The player {self.name} stands")
+
+    def reset(self):
+        super().reset()
+        self.bet = 0
+        self.stands = False
+    
 #gameloop
 
 #main
 def game():
+    
+    #init partisipants
+
+    #start round
+    #cash out 
+    #reset 
+    #start next round
+
+
     deck = Deck(COLORS, VALUES)
     deck.shuffle()
     
     for card in deck.cards:
         print(card.get_value() + " " + card.get_color())
 
-    # drawn_card = deck.draw() 
+    dealer_1 = Dealer("Alice")
+    player_1 = Player("Bob", 1000)
 
-    # print('''
-    
-    # Deck after drawing one:
-    
-    # ''')
+    print(deck.get_size())
 
-    # for card in deck.cards:
-    #     print(card)
-    
+    dealer_1.hit(deck)
+    player_1.hit(deck)
+
+    print(deck.get_size())
 
 if __name__ == "__main__":
     game()
