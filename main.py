@@ -55,144 +55,15 @@
 import itertools 
 import random
 
+from classes.Deck_class import Deck
+from classes.Card_class import Card
+from classes.Dealer_class import Dealer
+from classes.Player_class import Player
+
 #consts
 
 COLORS = frozenset(('Hearts', 'Spades', 'Diamonds', 'Clubs'))
 VALUES = frozenset(('2','3','4','5','6','7','8','9','jack','queen','king','ace'))
-
-#classes
-
-    #Deck  
-    #   -cards: List of Cards 
-    #   draw() -> card
-    #   shuffle() (empty all hands)
-class Deck:
-    def __init__(self, colors, values):
-        self.cards = []
-        card_list = list(itertools.product(colors,values))
-        for c in card_list:
-            card = Card(c[0], c[1])
-            self.cards.append(card)
-
-        
-    def draw(self):
-        return self.cards.pop()
-
-    def shuffle(self):
-        random.shuffle(self.cards)
-
-    def get_size(self):
-        return len(self.cards)
-        
-
-    #card
-    #   -color: String
-    #   -value (special case: ace) :int
-
-class Card:
-
-    def __init__(self, value, color):
-        self.value = value
-        self.color = color
-
-    def get_value(self): return self.value
-    def get_color(self): return self.color
-
-    #partisipant
-    #   -hand cards:List
-    #   -stand 
-    #   -hit
-
-class Partisipant:
-        '''Partispipant in the game of blackjack'''
-         
-        def __init__(self, name):
-            self.name = name
-            self.hand = []
-
-        def show_hand(self):
-            print(f'{self.hand} with count: {self.__get_hand_count()}')
-                    
-        def hit(self, deck):
-            self.hand.append(deck.draw())  
-
-        def __get_hand_count(self):
-            count = 0
-            for c in self.hand:
-                if c.get_value() in  ('jack', 'queen', 'king'):
-                    count += 10
-                elif c.get_value() is 'ace':
-                    ace_choice = input('Count  as 11 (yes)? Otherwise 1.')
-                    if ace_choice is 'yes': count += 11 
-                    else: count += 1
-                else: count += int(c.get_value())
-            return count
-
-        def reset(self):
-            self.hand = []
-
-
-    #dealer:partisipant
-class Dealer(Partisipant):
-    '''Partisipant in the role of a dealer, whose actions are determined by the rules'''
-
-    def __init__(self, name):
-        super().__init__(name)
-        self.hidden = True
-        
-    def show_hand(self):
-        print('Dealers hand:')
-        if self.hidden:
-            print(f'With one hidden card: {self.hand[0]} and count of {self.hand[0].get_value}')
-        else:
-            super().show_hand()
-
-    def hit(self, deck):
-        super().hit(deck)
-        print(f'Dealer {self.name} hits.' )
-    
-    def __get_hand_count(self):
-        count = 0
-        for c in self.hand:
-            if c.get_value() in  ('jack', 'queen', 'king'):
-                count += 10
-            elif c.get_value() is 'ace':
-                if count + 11 > 21: count+= 1
-                else: count += 11
-            else: count += int(c.get_value())
-
-    def reset(self):
-        super().reset()
-        self.hidden = True
-
-
-#player:partisipant
-#   -hand
-#   -purse
-#   -bet
-#   surrender()
-class Player(Partisipant):
-    '''Partisipant in the role of a player, able to bet or surrender (and later use side rules)'''
-
-    def __init__(self, name, purse):
-        super().__init__(name)
-        self.purse = purse 
-        self.bet = 0
-        self.stands = False
-        print(f'Player {self.name} initalized')
-
-    def hit(self, deck):
-        super().hit(deck)
-        print(f'Player {self.name} hits.' )
-
-    def stand(self):
-        self.stands = True
-        print(f"The player {self.name} stands")
-
-    def reset(self):
-        super().reset()
-        self.bet = 0
-        self.stands = False
     
 #gameloop
 
